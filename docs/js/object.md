@@ -12,6 +12,20 @@
 - 要传递的参数不多，则可以使用fn.call(thisObj, arg1, arg2 ...)
 - 要传递的参数很多，则可以用数组将参数整理好调用fn.apply(thisObj, [arg1, arg2 ...])
 - 不需要立即执行，而是想生成一个新的函数长期绑定某个函数给某个对象使用，使用const newFn = fn.bind(thisObj); newFn(arg1, arg2...)
+#### 封装函数 f，使 f 的 this 指向指定的对象
+```js
+function bindThis(f, oTarget) {
+    if(f.bind){
+        return f.bind(oTarget);
+    } else {
+        return function(){
+            return f.apply(oTarget,arguments);
+        };
+    }
+}
+```
+
+
 ### call的实现
 ```js
 Function.prototype.myCall = function (context) {
