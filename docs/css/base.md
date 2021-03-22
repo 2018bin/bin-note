@@ -11,7 +11,7 @@ CSS 规则是样式表的主体，通常样式表会包括大量的规则列表�
 - @document, 如果文档样式表满足给定条件则条件规则组里的规则生效。 (推延至 CSS Level 4 规范)
 除了以上这几个之外，下面还将对几个比较生涩的 @规则 进行介绍。
 ### @charset
- @charset 用于定义样式表使用的字符集。它必须是样式表中的第一个元素。如果有多个 @charset 被声明，只有第一个会被使用，而且不能在HTML元素或HTML页面的 <style> 元素内使用。
+ @charset 用于定义样式表使用的字符集。它必须是样式表中的第一个元素。如果有多个 @charset 被声明，只有第一个会被使用，而且不能在HTML元素或HTML页面的 `<style>` 元素内使用。
 
 注意：值必须是双引号包裹，且和
 ```js
@@ -44,6 +44,7 @@ link 和 @import 都能导入一个样式文件，它们有什么区别嘛？
     }
 }
 ```
+
 ## 层叠性
 是 CSS 中的核心特性之一，用于合并来自多个源的属性值的算法。比如说针对某个 HTML 标签，有许多的 CSS 声明都能作用到的时候，那最后谁应该起作用呢？层叠性说的大概就是这个。
 
@@ -369,9 +370,8 @@ h1 {
 ## 1px 边框解决方案
 Retina 显示屏比普通的屏幕有着更高的分辨率，所以在移动端的 1px 边框就会看起来比较粗，为了美观通常需要把这个线条细化处理。这里有篇文章列举了 7 中方案可以参考一下：
 7种方法解决移动端Retina屏幕1px边框问题
-```js
-https://www.jianshu.com/p/7e63f5a32636
-```
+[参考资料](https://www.jianshu.com/p/7e63f5a32636)
+ 
 
 而这里附上最后一种通过伪类和 transform 实现的相对完美的解决方案
 
@@ -444,11 +444,8 @@ https://www.jianshu.com/p/7e63f5a32636
 }
 ```
 这种写法的核心原理就是通过 ::after 伪元素为在父元素的最后一个子元素后面生成一个内容为空的块级元素，然后通过 clear 将这个伪元素移动到所有它之前的浮动元素的后面
-
-参考:
-```js
-https://www.jianshu.com/p/09bd5873bed4
-```
+[参考资料](https://www.jianshu.com/p/09bd5873bed4)
+ 
 ## 消除浏览器默认样式
 针对同一个类型的 HTML 标签，不同的浏览器往往有不同的表现，所以在网站制作的时候，开发者通常都是需要将这些浏览器的默认样式清除，让网页在不同的浏览器上能够保持一致。
 
@@ -504,10 +501,8 @@ table {
 
 文章介绍到：Normalize.css 只是一个很小的CSS文件，但它在默认的 HTML 元素样式上提供了跨浏览器的高度一致性。相比于传统的 CSS reset，Normalize.css 是一种现代的、为 HTML5 准备的优质替代方案，现在已经有很多知名的框架和网站在使用它了。
 
-Normalize.css 的具体样式可以看这里 Normalize.css。
-```js
-https://necolas.github.io/normalize.css/latest/normalize.css
-```
+Normalize.css 的具体样式可以看这里 Normalize.css。[参考资料](https://necolas.github.io/normalize.css/latest/normalize.css)
+
 区别于 reset.css，Normalize.css 有如下特点：
 - reset.css 几乎为所有标签都设置了默认样式，而 Normalize.css 则是有选择性的保护了部分有价值的默认值；
 - 修复了很多浏览器的 bug，而这是 reset.css 没做到的；
@@ -548,11 +543,8 @@ https://necolas.github.io/normalize.css/latest/normalize.css
     -webkit-box-orient:vertical;
 }
 ```
+[参考资料](https://juejin.cn/post/6938583040469762055)
 额外参考
-```js
-CSS 整块文本溢出省略特性探究。
-https://juejin.cn/post/6938583040469762055
-```
 ## 水平垂直居中
 让元素在父元素中呈现出水平垂直居中的形态，无非就 2 种情况：
 - 单行的文本、inline 或者 inline-block 元素；
@@ -627,7 +619,8 @@ https://juejin.cn/post/6938583040469762055
 }
 ```
 ### 不固定宽高的块级盒子
-参考:https://segmentfault.com/a/1190000016389031
+[参考资料](https://segmentfault.com/a/1190000016389031)
+
 
 方法一：absolute + transform
 ```css
@@ -767,6 +760,14 @@ https://juejin.cn/post/6938583040469762055
 }
 ```
 ### 三行布局（头尾定高主栏自适应）
+
+
+## CSS 动画
+- animation：用于设置动画属性，他是一个简写的属性，包含6个属性
+- transition：用于设置元素的样式过度，和animation有着类似的效果，但细节上有很大的不同
+- transform：用于元素进行旋转、缩放、移动或倾斜，和设置样式的动画并没有什么关系
+- translate：translate只是transform的一个属性值，即移动，除此之外还有 scale 等
+[参考资料](https://juejin.cn/post/6844903615920898056#heading-2)
 
 
 
