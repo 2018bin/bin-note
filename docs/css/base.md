@@ -768,10 +768,58 @@ Normalize.css 的具体样式可以看这里 Normalize.css。[参考资料](http
 - transform：用于元素进行旋转、缩放、移动或倾斜，和设置样式的动画并没有什么关系
 - translate：translate只是transform的一个属性值，即移动，除此之外还有 scale 等
 [参考资料](https://juejin.cn/post/6844903615920898056#heading-2)
-
-
-
-
+## CSS 整块文本溢出省略 
+### 文本超长打点
+对于单行文本，使用单行省略：
+```css
+{
+    width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+```
+而对于多行文本的超长省略，使用 -webkit-line-clamp 相关属性，兼容性也已经非常好了：
+```css
+{
+    width: 200px;
+    overflow : hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+```
+### 超长文本整块省略
+```html
+<p class="parent">
+    <span>FE</span>
+    <span>UI</span>
+    <span>UX Designer</span>
+    <span>前端工程师</span>
+</p>
+```
+对于超出文本长度的整一块 -- 前端工程师，一整块被省略。只需要将包裹整块标签元素的 span 的 display 由 inline 改为 inline-block 即可。
+```css
+.parent span {
+    display: inline-block;
+}
+```
+### iOS 不支持整块超长溢出打点省略
+```css
+.parent {
+    width: 200px;
+    white-space: normal;
+    overflow : hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+}
+.parent span {
+    display: inline-block;
+}
+```
 
 
 

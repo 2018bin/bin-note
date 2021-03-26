@@ -178,7 +178,7 @@ function resolutionProcedure(promise2, x, resolve, reject) {
 }
 ```
 
-#### Promise 的其他API
+### Promise 的其他API
 1. Promise.resolve(result)
 ```js
 //制造一个成功或失败
@@ -253,7 +253,7 @@ Promise.allSettled2=(promiseList)=>{
       {status:'fulfilled',value:1}
 ]
 
-##### 手写Promise
+### 手写Promise
 ```js
 //手写Promise.all
 function all(promiseArray){
@@ -316,6 +316,7 @@ Promise.race([promise1, promise2, promise3]).then(function(values) {
   console.log(values);
 });
 ```
+
 ## async 和 await
 一个函数如果加上 async ，那么该函数就会返回一个 Promise
 ```js
@@ -517,3 +518,491 @@ parseFloat((0.1 + 0.2).toFixed(10))
 |     \D	| 和上面相反            | 
 |     \b	| 匹配单词的开始或结束  | 
 |     \B	| 和上面相反             | 
+
+## 数组降维
+- 定义 arrReduction 方法接收一个数组参数
+- 行 {1} 调用递归函数 arrReductionRecursive(arr, []) 第二个参数可选，也可以在行 {2} 设置默认值，需要 ES6 以上支持
+- 行 {3} 使用 forEach 对数组循环遍历
+- 行 {4} 检测到当前遍历到的元素为数组继续递归遍历
+- 行 {5} 如果当前元素不为数组，result 保存结果
+- 行 {6} 返回结果
+```js
+/**
+ * 数组降维递归调用
+ * @param { Array } arr 
+ */
+function arrReductionRecursive(arr, result=[]) { // {2}
+  arr.forEach(item => { // {3}
+    item instanceof Array ?
+      arrReductionRecursive(item, result) // {4}
+    : 
+      result.push(item); // {5}
+  })
+
+  return result; // {6}
+}
+
+// 测试
+const arr = [[0, 1], [2, [4, [6, 7]]]];
+console.log('arrReduction: ', arrReductionRecursive(arr)); // [ 0, 1, 2, 4, 6, 7 ]
+```
+## 数组/对象数组去重
+- 定义 unique 去重方法接收两个参数 arr、name
+- 行 {1} 如果待去重为对象数组则 name 必传
+- 行 {2} 设置 key 是下面用来过滤的依据
+- 行 {3} 如果 name 不存在，按照普通数组做过滤, key 设置为 current 即当前的数组元素
+- 行 {4} 检测要过滤的 key 是否在当前对象中，如果是将值赋予 key
+- 行 {5} 对于对象元素，如果 key 不在当前对象中，设置一个随机值，使得其它 key 不受影响，例如 [{a: 1}, {b: 1}] 现在对 key 为 a 的元素做过滤，但是 b 中没有 a 针对这种情况做处理
+- 行 {6} 为了解决类似于 [3, '3'] 这种情况，这样会把 '3' 也过滤掉
+- 行 {7} 这是我们实现的关键，如果 key 在 hash 对象中不存在什么也不做，否则，设置 hash[key] = true 且像 prev 中添加元素。
+- 行 {8} 返回当前结果用户下次遍历
+```js
+/**
+ * 数组/对象数组去重
+ * @param { Array } arr 待去重的数组
+ * @param { String } name 如果是对象数组，为要过滤的依据 key
+ * @returns { Array }
+ */
+function unique (arr=[], name='') {
+  if ((arr[0] instanceof Object) && !name) { // {1}
+    throw new Error('对象数组请传入需要过滤的属性！');
+  }
+
+  const hash = {};
+  return arr.reduce((prev, current) => {
+    let key; // {2}
+    if (!name) { 
+      key = current; // {3}
+    } else if (current.hasOwnProperty(name)) { 
+      key = current[name]; // {4}
+    } else {
+      key = Math.random(); // {5} 保证其它 key 不受影响
+    }
+
+    if (!(Object.prototype.toString.call(key) === '[object Number]')) { // {6}
+      key += '_';
+    }
+
+    hash[key] ? '' : hash[key] = true && prev.push(current); // {7}
+
+    return prev; // {8}
+  }, []);
+}
+
+let arr = [1, 2, 2, 3, '3', 4];
+    arr = [{ a: 1 }, { b: 2 }, { b: 2 }]
+    arr = [{ a: 1 }, { a: 1 }, { b: 2 }]
+
+console.log(unique(arr, 'a'));
+```
+一种更简单的 ES6 新的数据结构 Set，因为 Set 能保证集合中的元素是唯一的，可以利用这个特性，但是支持有限，对象数组这种就不支持咯
+```js
+let arr = [1, 2, 2, 3, '3', 4];
+[...new Set(arr)] // [ 1, 2, 3, '3', 4 ]
+```
+### 使用双重for和splice
+```js
+// 双重for加splice
+function unique(arr){            
+    for(var i=0; i<arr.length; i++){
+        for(var j=i+1; j<arr.length; j++){
+            if(arr[i]==arr[j]){         
+            //第一个等同于第二个，splice方法删除第二个
+                arr.splice(j,1);
+                j--;
+            }
+        }
+    }
+return arr;
+}
+```
+### 使用indexof和includes
+```js
+//使用indexof
+function unique(arr) {
+    var array = [];//用新数组来装
+    for (let i = 0; i < arr.length; i++) {
+        if (array.indexOf(arr[i]) === -1) {
+            //indexof返回-1表示在新数组中不存在该元素
+            array.push(arr[i])//是新数组里没有的元素就push入
+        }
+    }
+    return array;
+}
+```
+使用includes也可以判断是否含有某值
+```js
+function unique(arr) {
+    var array =[];
+    for(var i = 0; i < arr.length; i++) {
+            if( !array.includes(arr[i]) ) {
+            //includes 检测数组是否有某个值
+                    array.push(arr[i]);
+              }
+    }
+    return array
+}
+```
+- indexOf()方法返回在数组中可以找到一个给定元素的第一个索引，如果不存在，则返回-1。有两个参数，第一个参数是要查找的元素，第二个参数可选，是开始查找的位置。如果该索引值大于或等于数组长度，意味着不会在数组里查找，返回-1。如果参数中提供的索引值是一个负值，则将其作为数组末尾的一个抵消，即-1表示从最后一个元素开始查找，-2表示从倒数第二个元素开始查找，查找顺序仍然是从前向后查询数组。如果抵消后的索引值仍小于0，则整个数组都将会被查询。其默认值为0
+- includes() 方法用来判断一个数组是否包含一个指定的值，根据情况，如果包含则返回 true，否则返回false。其也有两个参数，第一个是要查找的元素，第二个可选，是开始查找的位置，与indexof相同的是，第二个参数为负值的话，就从末尾开始往前跳 参数 的绝对值个索引，然后往后搜寻。默认为 0
+
+### sort方法先排序
+```js
+function unique(arr) {
+    arr = arr.sort((a, b) => a - b)//sort先按从小到大排序
+    var arrry= [arr[0]];
+    for (var i = 1; i < arr.length; i++) {
+        if (arr[i] !== arr[i-1]) {
+            arrry.push(arr[i]);
+        }
+    }
+    return arrry;
+}
+```
+sort方法用于从小到大排序(返回一个新数组)，其参数中不带以上回调函数就会在两位数及以上时出现排序错误(如果省略，元素按照转换为的字符串的各个字符的Unicode位点进行排序。两位数会变为长度为二的字符串来计算)。所以自己要写一个排序标准，当回调函数返回值大于0时两个值调换顺序。
+
+### 数据结构 Set
+```js
+function unique(arr) {
+    const result=new Set(arr);
+    return [...result];
+    //使用扩展运算符将Set数据结构转为数组
+}
+```
+Set对象是值的集合，你可以按照插入的顺序迭代它的元素。 Set中的元素只会出现一次，即 Set 中的元素是唯一的。
+### Map
+```js
+function unique(arr) {
+    let map = new Map();
+    let array = new Array();  // 数组用于返回结果
+    for (let i = 0; i < arr.length; i++) {
+      if(map.has(arr[i])) {  // 如果有该key值
+        map.set(arr[i], true); 
+      } else { 
+        map.set(arr[i], false);   // 如果没有该key值
+        array.push(arr[i]);
+      }
+    } 
+    return array ;
+}
+```
+Map 对象保存键值对，并且能够记住键的原始插入顺序。任何值(对象或者原始值) 都可以作为一个键或一个值。
+- Map.prototype.has(key) 返回一个布尔值，表示Map实例是否包含键对应的值。
+- Map.prototype.set(key, value) 设置Map对象中键的值。返回该Map对象。
+
+### filter
+```js
+function unique(arr) {
+    return arr.filter(function (item, index, arr) {
+        //当前元素，在原始数组中的第一个索引==当前索引值，否则返回当前元素
+        //不是那么就证明是重复项，就舍弃
+        return arr.indexOf(item) === index;
+    })
+}
+```
+filter英文意思是筛选，filter() 方法创建一个新数组, 其包含通过所提供函数实现的测试的所有元素。其回调函数包含三个参数(数组中当前正在处理的元素,在处理的元素在数组中的索引(可选),调用了 filter 的数组本身(可选))
+### reduce加includes
+```js
+function unique(arr){
+    let result=arr.reduce((acc,cur)=>{
+        if(!acc.includes(cur)){
+            acc.push(cur);
+        }
+        return acc;
+    },[])//[]作为回调函数的第一个参数的初始值
+    return result
+}
+```
+
+
+
+## 新建长度为9内容全部填1的数组
+```js
+new Array(9).fill(1)
+```
+## 实现一个 sleep 函数
+```js
+/**
+ * 延迟函数
+ * @param { Number } seconds 单位秒
+ */
+function sleep(seconds) {
+  return new Promise(resolve => {
+    setTimeout(function() {
+      resolve(true);
+    }, seconds)
+  })
+}
+async function test() {
+  console.log('hello');
+  await sleep(5000);
+  console.log('world! 5 秒后输出');
+}
+test();
+```
+## 柯里化函数实现
+接收函数作为参数的函数称为高阶函数，柯里化是高阶函数中的一种特殊写法。
+
+函数柯里化是一把接受多个参数的函数转化为最初只接受一个参数且返回接受余下的参数返回结果的新函数。
+```js
+function add(a) {
+  return function(b) {
+    return function(c) {
+      return a + b + c;
+    }
+  }
+}
+console.log(add(1)(2)(3)); // 6
+```
+函数柯里化具备更加强大的能力，因此，我们要去想办法实现一个柯里化的通用式，上面例子中我们使用了闭包，但是代码是重复的，所以我们还需要借助递归来实现。
+
+实现思路：
+- 行 {1} 定义 addFn 函数
+- 行 {2} 定义 curry 柯里化函数接收两个参数，第一个为 fn 需要柯里化的函数，第二个 ...args 实际为多个参数例如 1, 2 ...
+- 行 {3} args.length 是函数传入的参数，如果小于 fn.length 说明期望的参数长度未够，继续递归调用收集参数
+- 行 {4} 为一个匿名函数
+- 行 {5} 获取参数，注意获取到的数据为数组，因此行 {6} 进行了解构传递
+- 行 {3} 如果 args.length > fn.length 说明参数 args 收集完成，开始执行代码行 {7} 因为 args 此时为数组，所以使用了 apply 或者也可以使用 call，改动行 {7} fn.call(null, ...args)
+- 行 {8} 创建一个柯里化函数 add，此时 add 返回结果 curry 的匿名函数也就是代码行 {4} 处
+- 至此整个函数柯里化已完成可以自行测试。
+```js
+/**
+ * add 函数
+ * @param { Number } a 
+ * @param { Number } b 
+ * @param { Number } c 
+ */
+function addFn(a, b, c) { // {1}
+  return a + b + c;
+}
+
+/**
+ * 柯里化函数
+ * @param { Function } fn 
+ * @param { ...any } args 记录参数
+ */
+function curry(fn, ...args) { // {2}
+  if (args.length < fn.length) { // {3}
+    return function() { // {4}
+      let _args = Array.prototype.slice.call(arguments); // {5}
+      return curry(fn, ...args, ..._args); // {6} 上面得到的结果为数组，进行解构 
+    }
+  }
+
+  return fn.apply(null, args); // {7}
+}
+
+// curry 函数简写如下，上面写法可能更易理解
+// const curry = (fn, ...args) => args.length < fn.length ?
+// 	(..._args) => curry(fn, ...args, ..._args)
+// 	:
+// 	fn.call(null, ...args);
+
+// 柯里化 add 函数
+const add = curry(addFn); // {8}
+
+console.log(add(1)(2)(3)); // 6
+console.log(add(1, 2)(3)); // 6
+console.log(add(1)(2, 3)); // 6
+```
+## 实现一个 new/instanceof 操作符
+### 自定义_new()实现new操作符
+自定义_new()方法，模拟new操作符实现原理，分为以下三步骤：
+- 行 {1} 以构造器的 prototype 属性为原型，创建新对象
+  - {1.1} 创建一个新对象 obj
+  - {1.2} 新对象的 proto 指向构造函数的 prototype，实现继承
+- 行 {2} 改变 this 指向，将新的实例 obj 和参数传入给构造函数 fn 执行
+- 行 {3} 如果构造器没有手动返回对象，则返回第一步创建的对象，例如：function Person(name) { this.name = name; return this; } 这样手动给个返回值，行 {2} result 会拿到一个返回的对象，否则 result 返回 undefined，最后就只能将 obj 给返回。
+```js
+/**
+ * 实现一个 new 操作符
+ * @param { Function } fn 构造函数
+ * @param  { ...any } args
+ * @returns { Object } 构造函数实例
+ */
+function _new(fn, ...args) {
+  // {1}  以构造器的 prototype 属性为原型，创建新对象
+  // 以下两行代码等价于
+  // const obj = Object.create(fn.prototype)
+  const obj = {}; // {1.1} 创建一个新对象 obj
+  obj.__proto__ = fn.prototype; // {1.2} 新对象的 __proto__ 指向构造函数的 prototype，实现继承
+
+  // {2} 改变 this 指向，将新的实例 obj 和参数传入给构造函数 fn 执行
+  const result = fn.apply(obj, args);
+
+  // {3} 返回实例，如果构造器没有手动返回对象，则返回第一步创建的对象
+  return typeof result === 'object' ? result : obj;
+}
+```
+将构造函数 Person 与行参传入我们自定义 _new() 方法，得到实例 zhangsan，使用 instanceof 符号检测与使用 new 是一样的。
+```js
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+
+const zhangsan = _new(Person, '张三', 20);
+const lisi = new Person('李四', 18)
+
+console.log(zhangsan instanceof Person, zhangsan); // true Person { name: '张三', age: 20 }
+console.log(lisi instanceof Person, lisi); // true Person { name: '李四', age: 18 }
+```
+### 自定义 _instanceof() 实现 instanceof 操作符
+instanceof 运算符用于检测构造函数的 prototype 属性是否出现在某个实例对象的原型链上。
+```js
+function Person() {}
+const p1 = new Person();
+const n1 = new Number()
+
+console.log(p1 instanceof Person) // true
+console.log(n1 instanceof Person) // false
+
+console.log(_instanceof(p1, Person)) // true
+console.log(_instanceof(n1, Person)) // false
+
+function _instanceof(L, R) {
+  L = L.__proto__;
+  R = R.prototype;
+
+  while (true) {
+    if (L === null) return false;
+    if (L === R) return true;
+    L = L.__proto__;
+  }
+}
+```
+## 手撕 call/apply/bind 三兄弟
+### 三者区别：
+- call：改变 this 指向，其它参数挨个传入，会立即执行，例如：test.call(obj, 1, 2);
+- apply：改变 this 指向，第二个参数需传入数组类型，会立即执行，例如：test.call(obj, [1, 2]);
+- bind：改变 this 执行，会接收两次参数传递，需要手动执行，例如：const testFn = test.bind(this, 1); testFn(2);
+### 自定义 mayJunCall 函数
+```js
+/*
+ * 实现一个自己的 call 方法
+ */
+Function.prototype.mayJunCall = function(context) {
+  // {1} 如果 context 不存，根据环境差异，浏览器设置为 window，Nodejs 设置为 global
+  context = context ? context : globalThis.window ? window : global;
+  const fn = Symbol(); // {2} 上下文定义的函数保持唯一，借助 ES6 Symbol 方法 
+  context[fn] = this; // {3} this 为需要执行的方法，例如 function test(){}; test.call(null) 这里的 this 就代表 test() 方法
+  const args = [...arguments].slice(1); // {4} 将 arguments 类数组转化为数组
+  const result = context[fn](...args) // {5} 传入参数执行该方法
+  delete context[fn]; // {6} 记得删除
+  return result; // {7} 如果该函数有返回值，将结果返回
+}
+
+// 测试
+name = 'lisi';
+const obj = {
+  name: 'zs'
+};
+
+function test(age, sex) {
+  console.log(this.name, age, sex);
+}
+
+test(18, '男'); // lisi 18 男
+test.mayJunCall(obj, 18, '男'); // zs 18 男
+```
+### 自定义 mayJunApply 函数
+```js
+/**
+ * 实现一个自己的 apply 方法
+ */
+Function.prototype.mayJunApply = function(context) {
+  let args = [...arguments].slice(1); // 将 arguments 类数组转化为数组
+
+  if (args && args.length > 0 && !Array.isArray(args[0])) { // 参数校验，如果传入必须是数组
+    throw new TypeError('CreateListFromArrayLike called on non-object');
+  }
+
+  context = context ? context : globalThis.window ? window : global;
+  const fn = Symbol();
+  context[fn] = this; 
+  args = args.length > 0 ? args[0] : args; // 因为本身是一个数组，此时传值了就是 [[0, 1]] 这种形式
+  const result = context[fn](...args);
+  delete context[fn];
+  return result
+}
+```
+### 自定义 mayJunBind 函数
+bind 的实现与 call、apply 不同，但也没那么复杂，首先 bind 绑定之后并不会立即执行，而是会返回一个新的匿名函数，只有我们手动调用它才会执行。
+```js
+/**
+ *  实现一个自己的 bind 方法
+ */
+Function.prototype.mayJunBind = function(context) {
+  const that = this; // 保存当前调用时的 this，因为 bind 不是立即执行
+  const firstArgs = [...arguments].slice(1); // 获取第一次绑定时的参数
+
+  return function() {
+    const secondArgs = [...arguments]; // 获取第二次执行时的参数
+    const args = firstArgs.concat(secondArgs); // 两次参数拼接
+
+    return that.apply(context, args); // 将函数与 context 进行绑定，传入两次获取的参数 args
+  }
+}
+```
+## 实现 map/reduce
+### 定义 mayJunMap 实现 map 函数
+```js
+/**
+ * 实现 map 函数
+ * map 的第一个参数为回调，第二个参数为回调的 this 值
+ */
+Array.prototype.mayJunMap = function(fn, thisValue) {
+  const fnThis = thisValue || [];
+  return this.reduce((prev, current, index, arr) => {
+    prev.push(fn.call(fnThis, current, index, arr));
+    return prev;
+  }, []);
+}
+
+const arr1 = [undefined, undefined];
+const arr2 = [undefined, undefined].mayJunMap(Number.call, Number);
+const arr3 = [undefined, undefined].mayJunMap((element, index) => Number.call(Number, index));
+
+// arr2 写法等价于 arr3
+console.log(arr1) // [ undefined, undefined ]
+console.log(arr2) // [ 0, 1 ]
+console.log(arr3) // [ 0, 1 ]
+```
+### 定义 mayJunReduce 实现 reduce 函数
+```js
+Array.prototype.mayJunReduce = function(cb, initValue) {
+  const that = this;
+
+  for (let i=0; i<that.length; i++) {
+    initValue = cb(initValue, that[i], i, that);
+  }
+
+  return initValue;
+}
+
+const arr = [1, 2, 3];
+const arr1 = arr.mayJunReduce((prev, current) => {
+  console.log(prev, current);
+  prev.push(current)
+  return prev;
+}, [])
+
+console.log(arr1)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

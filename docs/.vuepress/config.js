@@ -68,6 +68,14 @@ module.exports = {
                     ["/vue/vue3", 'vue3']
                 ]
             },
+            {
+                title: '面试',
+                collapsable: false,
+                children: [
+                    ["/interview/jsbase", 'js基础'],
+
+                ]
+            },
 
 
         ],

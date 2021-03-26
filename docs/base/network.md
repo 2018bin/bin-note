@@ -117,6 +117,16 @@ websocket 是 HTML5 的一种新协议，实现了浏览器和服务器的实时
 - AJAX 客户端发起
 - WebSocket 服务器端和客户端相互推送
 
+
+
+## localStorage、sessionStorage 和 Cookie 区别
+- 数据存储方面：cookie在同源的HTTP请求里，在服务器和客户端来回传递。storage是本地保存。
+- 存储数据大小：cookie限制4kb，storage约5MB。
+- 数据有效期：cookie的有效期与过期时间设置有关（默认是会话），sessionStorage 当前标签页有效，  localStorage始终有效。
+- 作用域：cookie、localStorage同源窗口，sessionStorage当前标签页
+- 操作：cookie只作为document的一个属性可获取，没有其他操作方法。storage有getItem、setItem、removeItem、clear等方法。
+
+ 
  
 
 
