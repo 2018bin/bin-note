@@ -93,21 +93,7 @@ Function.prototype.myBind = function (context) {
   }
 }
 ```
-## instanceof
-检测数据类型，如果变量是给定引用类型的实例，那么instanceof就返回true。如果检测的是基础类型的值，那么返回false
-```js
-function myInstanceof(left,right){
-  //如果是基础类型就直接返回false
-  if(typeof left !='object' && typeof left ==null) return false
-  //Object.getPrototypeOf()方法返回指定对象的原型（内部[[Prototype]]属性的值）
-  let proto=Object.getPrototypeOf(left);
-  while(true){
-    if(!proto) return false;
-    if(proto==right.prototype) return true;
-    proto=Object.getPrototypeOf(proto);
-  } 
-}
-```
+
 ## 深拷贝
  ![](~@/deepClone.jpg)
 ```js
@@ -210,7 +196,7 @@ define(function(require, exports, module) {
     b.doSomething()
 })
 ```
-#### 防抖
+## 防抖
 ```js
 // 这个是用来获取当前时间戳的
 function now() {
@@ -265,75 +251,33 @@ function debounce (func, wait = 50, immediate = true) {
 - 对于按钮防点击来说的实现：如果函数是立即执行的，就立即调用，如果函数是延迟执行的，就缓存上下文和参数，放到延迟函数中去执行。一旦我开始一个定时器，只要我定时器还在，你每次点击我都重新计时。一旦你点累了，定时器时间到，定时器重置为 null，就可以再次点击了。
 - 对于延时执行函数来说的实现：清除定时器ID，如果是延迟调用就调用函数
 
-#### 节流
+## 节流
 防抖动和节流本质是不一样的。防抖动是将多次执行变为最后一次执行，节流是将多次执行变成每隔一段时间执行
 ```js
-/**
- * underscore 节流函数，返回函数连续调用时，func 执行频率限定为 次 / wait
- *
- * @param  {function}   func      回调函数
- * @param  {number}     wait      表示时间窗口的间隔
- * @param  {object}     options   如果想忽略开始函数的的调用，传入{leading: false}。
- *                                如果想忽略结尾函数的调用，传入{trailing: false}
- *                                两者不能共存，否则函数不能执行
- * @return {function}             返回客户调用函数
- */
-_.throttle = function(func, wait, options) {
-    var context, args, result;
-    var timeout = null;
-    // 之前的时间戳
-    var previous = 0;
-    // 如果 options 没传则设为空对象
-    if (!options) options = {};
-    // 定时器回调函数
-    var later = function() {
-      // 如果设置了 leading，就将 previous 设为 0
-      // 用于下面函数的第一个 if 判断
-      previous = options.leading === false ? 0 : _.now();
-      // 置空一是为了防止内存泄漏，二是为了下面的定时器判断
-      timeout = null;
-      result = func.apply(context, args);
-      if (!timeout) context = args = null;
-    };
-    return function() {
-      // 获得当前时间戳
-      var now = _.now();
-      // 首次进入前者肯定为 true
-	  // 如果需要第一次不执行函数
-	  // 就将上次时间戳设为当前的
-      // 这样在接下来计算 remaining 的值时会大于0
-      if (!previous && options.leading === false) previous = now;
-      // 计算剩余时间
-      var remaining = wait - (now - previous);
-      context = this;
-      args = arguments;
-      // 如果当前调用已经大于上次调用时间 + wait
-      // 或者用户手动调了时间
- 	  // 如果设置了 trailing，只会进入这个条件
-	  // 如果没有设置 leading，那么第一次会进入这个条件
-	  // 还有一点，你可能会觉得开启了定时器那么应该不会进入这个 if 条件了
-	  // 其实还是会进入的，因为定时器的延时
-	  // 并不是准确的时间，很可能你设置了2秒
-	  // 但是他需要2.2秒才触发，这时候就会进入这个条件
-      if (remaining <= 0 || remaining > wait) {
-        // 如果存在定时器就清理掉否则会调用二次回调
-        if (timeout) {
-          clearTimeout(timeout);
-          timeout = null;
-        }
-        previous = now;
-        result = func.apply(context, args);
-        if (!timeout) context = args = null;
-      } else if (!timeout && options.trailing !== false) {
-        // 判断是否设置了定时器和 trailing
-	    // 没有的话就开启一个定时器
-        // 并且不能不能同时设置 leading 和 trailing
-        timeout = setTimeout(later, remaining);
-      }
-      return result;
-    };
-  };
+function throttle(fn, interval) {
+    let flag = true
+    return function(...args) {
+    	if (!flag) return;
+    	flag = false
+    	setTimeout(() => {
+      	    fn.apply(this, args)
+      	    flag = true
+    	}, interval)
+    }
+}
+
+// 或者可以这样，挑你喜欢的。
+function throttle(fn, interval) {
+    let last = 0 // 首次直接执行
+    return function (...args) {
+    	let now = +new Date()
+    	if(now - last < interval) return;
+    	last = now // 时间一到就更新 last
+    	fn.apply(this, args)
+    }
+}
 ```
+
 
 
 ## 继承
@@ -454,12 +398,56 @@ fooContext.Scope = [
 ```
 
 ## this
+##  数据类型
+- 基本类型：Number、Boolean、String、null、undefined、symbol（ES6 新增的），BigInt（ES2020）
+- 引用类型：Object，对象子类型（Array，Function）
+### Number() 的存储空间
+Math.pow(2, 53) ，53 为有效数字，会发生截断，等于 JS 能支持的最大数字。
+### symbol 
+Symbol.for() 可以在全局访问 symbol。
 
+主要用来提供遍历接口，布置了 symbol.iterator 的对象才可以使用 for···of 循环，可以统一处理数据结构。调用之后回返回一个遍历器对象，包含有一个 next 方法，使用 next 方法后有两个返回值 value 和 done 分别表示函数当前执行位置的值和是否遍历完毕。
 
+Symbol.for() 可以在全局访问 symbol
+## instanceof
+检测数据类型，如果变量是给定引用类型的实例，那么instanceof就返回true。如果检测的是基础类型的值，那么返回false
+```js
+function myInstanceof(left,right){
+  //如果是基础类型就直接返回false
+  if(typeof left !='object' && typeof left ==null) return false
+  //Object.getPrototypeOf()方法返回指定对象的原型（内部[[Prototype]]属性的值）
+  let proto=Object.getPrototypeOf(left);
+  while(true){
+    if(!proto) return false;
+    if(proto==right.prototype) return true;
+    proto=Object.getPrototypeOf(proto);
+  } 
+}
+```
+## typeof
 
+## 闭包
+闭包是指有权访问另外一个函数作用域中的变量的函数
 
+JavaScript代码的整个执行过程，分为两个阶段，代码编译阶段与代码执行阶段。编译阶段由编译器完成，将代码翻译成可执行代码，这个阶段作用域规则会确定。执行阶段由引擎完成，主要任务是执行可执行代码，执行上下文在这个阶段创建。
 
+## 作用域
+ES5 中只存在两种作用域：全局作用域和函数作用域。在 JavaScript 中，我们将作用域定义为一套规则，这套规则用来管理引擎如何在当前作用域以及嵌套子作用域中根据标识符名称进行变量（变量名或者函数名）查找
+### 作用域链
+首先要了解作用域链，当访问一个变量时，编译器在执行这段代码时，会首先从当前的作用域中查找是否有这个标识符，如果没有找到，就会去父作用域查找，如果父作用域还没找到继续向上查找，直到全局作用域为止,，而作用域链，就是有当前作用域与上层作用域的一系列变量对象组成，它保证了当前执行的作用域对符合访问权限的变量和函数的有序访问。
 
+### 闭包产生的本质
+当前环境中存在指向父级作用域的引用
+### 什么是闭包
+闭包是一种特殊的对象，它由两部分组成：执行上下文（代号 A），以及在该执行上下文中创建的函数 （代号 B），当 B 执行时，如果访问了 A 中变量对象的值，那么闭包就会产生，且在 Chrome 中使用这个执行上下文 A 的函数名代指闭包。
+#### 一般如何产生闭包
+- 返回函数
+- 函数当做参数传递
+#### 闭包的应用场景
+- 柯里化 bind
+- 模块
+
+[参考资料](https://segmentfault.com/a/1190000012646221)
 
 
 

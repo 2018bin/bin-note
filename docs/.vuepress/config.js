@@ -48,7 +48,8 @@ module.exports = {
                 collapsable: false,
                 children: [
                     ["/js/object", '对象'],
-                    ["/js/function", '方法']
+                    ["/js/function", '方法'],
+                    ["/js/array", '数组']
 
                 ]
             },
@@ -69,10 +70,19 @@ module.exports = {
                 ]
             },
             {
+                title: '数据结构',
+                collapsable: false,
+                children: [
+                    ["/dataStructure/twoTree", '二叉树'],
+
+                ]
+            },
+            {
                 title: '面试',
                 collapsable: false,
                 children: [
                     ["/interview/jsbase", 'js基础'],
+                    ["/interview/vue", 'vue'],
 
                 ]
             },
