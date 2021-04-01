@@ -74,6 +74,7 @@ module.exports = {
                 collapsable: false,
                 children: [
                     ["/dataStructure/twoTree", '二叉树'],
+                    ["/dataStructure/suanfa", '算法'],
 
                 ]
             },
@@ -81,8 +82,10 @@ module.exports = {
                 title: '面试',
                 collapsable: false,
                 children: [
-                    ["/interview/jsbase", 'js基础'],
+                    ["/interview/jsbase", 'JavaScript基础'],
                     ["/interview/vue", 'vue'],
+                    ["/interview/webpack", 'webpack'],
+                    ["/interview/Babel", 'Babel'],
 
                 ]
             },

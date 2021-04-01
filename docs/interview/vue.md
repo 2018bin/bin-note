@@ -16,7 +16,21 @@ Vue为MVVM框架，当数据模型data变化时，页面视图会得到响应更
 - beforeDestroy：发生在实例销毁之前，在当前阶段实例完全可以被使用，我们可以在这时进行善后收尾工作，比如清除计时器。
 - destroyed：发生在实例销毁之后，这个时候只剩下了dom空壳。组件已被拆解，数据绑定被卸除，监听被移出，子实例也统统被销毁。
 
- 
+## Vue中组件生命周期调用顺序
+组件的调用顺序都是先`父`后`子`,渲染完成的顺序是先`子`后`父`。
+
+组件的销毁操作是先`父`后`子`，销毁完成的顺序是先`子`后`父`。
+### 加载渲染过程
+父beforeCreate->父created->父beforeMount->子beforeCreate->子created->子beforeMount- >子mounted->父mounted
+### 子组件更新过程
+父beforeUpdate->子beforeUpdate->子updated->父updated
+
+### 父组件更新过程
+父 beforeUpdate -> 父 updated
+### 销毁过程
+父beforeDestroy->子beforeDestroy->子destroyed->父destroyed
+
+
 ## computed与watch的区别
 计算属性computed和监听器watch都可以观察属性的变化从而做出响应，不同的是：
 
@@ -24,6 +38,14 @@ Vue为MVVM框架，当数据模型data变化时，页面视图会得到响应更
 
 而监听器watch并不具备缓存性，监听器watch提供一个监听函数，当监听的属性发生变化时，会立即执行该函数。
  
+## nextTick原理
+在下次 DOM 更新循环结束之后执行延迟回调。nextTick主要使用了宏任务和微任务。根据执行环境分别尝试采用
+- Promise
+- MutationObserver
+- setImmediate
+- 如果以上都不行则采用setTimeout
+
+
 ## 组件的data必须是一个函数
 一个组件可能在很多地方使用，也就是会创建很多个实例，如果data是一个对象的话，对象是引用类型，一个实例修改了data会影响到其他实例，所以data必须使用函数，为每一个实例创建一个属于自己的data，使其同一个组件的不同实例互不影响。
 
@@ -138,8 +160,34 @@ Composition API
 - 白屏时间更短：相对于客户端渲染，服务端渲染在浏览器请求URL之后已经得到了一个带有数据的HTML文本，浏览器只需要解析HTML，直接构建DOM树就可以。而客户端渲染，需要先得到一个空的HTML页面，这个时候页面已经进入白屏，之后还需要经过加载并执行 JavaScript、请求后端服务器获取数据、JavaScript 渲染页面几个过程才可以看到最后的页面。特别是在复杂应用中，由于需要加载 JavaScript 脚本，越是复杂的应用，需要加载的 JavaScript 脚本就越多、越大，这会导致应用的首屏加载时间非常长，进而降低了体验感。
  
 
+## 性能优化
 
+### 编码阶段
+- 尽量减少data中的数据，data中的数据都会增加getter和setter，会收集对应的watcher
+- v-if和v-for不能连用
+- 如果需要使用v-for给每项元素绑定事件时使用事件代理
+- SPA 页面采用keep-alive缓存组件
+- 在更多的情况下，使用v-if替代v-show
+- key保证唯一
+- 使用路由懒加载、异步组件
+- 防抖、节流
+- 第三方模块按需导入
+- 长列表滚动到可视区域动态加载，虚拟列表
+- 图片懒加载
 
+### SEO优化
+- 预渲染
+- 服务端渲染SSR
 
+### 打包优化
+- 压缩代码
+- Tree Shaking/Scope Hoisting
+- 使用cdn加载第三方模块
+- 多线程打包happypack
+- splitChunks抽离公共文件
+- sourceMap优化 
 
-
+### 用户体验
+- 骨架屏
+- PWA
+还可以使用缓存(客户端缓存、服务端缓存)优化、服务端开启gzip压缩等。
