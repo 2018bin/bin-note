@@ -83,6 +83,7 @@ module.exports = {
                 collapsable: false,
                 children: [
                     ["/interview/jsbase", 'JavaScript基础'],
+                    ["/interview/css", 'CSS'],
                     ["/interview/vue", 'vue'],
                     ["/interview/webpack", 'webpack'],
                     ["/interview/Babel", 'Babel'],

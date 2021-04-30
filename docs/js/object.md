@@ -94,36 +94,6 @@ Function.prototype.myBind = function (context) {
 }
 ```
 
-## 深拷贝
- ![](~@/deepClone.jpg)
-```js
-function deepClone(obj,map = new Map()){
-  if(obj instanceof Object){
-    if(obj instanceof Function) return obj;
-    if(obj instanceof Date) return new Date(obj);
-    if(obj instanceof RegExp) return new RegExp(obj);
-    // 解决循环引用
-    if(map.has(obj)) return map.get(obj);
-    // 拷贝原型链
-    let allDesc = Object.getOwnPropertyDescriptors(target);
-    let cloneObj = Object.create(Object.getPrototypeOf(target), allDesc);
-    map.set(obj,cloneObj);
-    // Reflect.ownKeys可以拿到不可枚举属性和symbol类型的键名
-    for(let key of Reflect.ownKeys(obj)){
-      cloneObj[key] = deepClone(obj[key],map);
-    }
-    return cloneObj
-  }else{
-    return obj;
-  }
-}
-```
-深拷贝通常可以通过 JSON.parse(JSON.stringify(object))来解决。
-但是该方法也是有局限性的：
-- 会忽略 undefined
-- 会忽略 symbol
-- 不能序列化函数
-- 不能解决循环引用的对象
 
 
 ## 模块化
@@ -196,89 +166,6 @@ define(function(require, exports, module) {
     b.doSomething()
 })
 ```
-## 防抖
-```js
-// 这个是用来获取当前时间戳的
-function now() {
-  return +new Date()
-}
-/**
- * 防抖函数，返回函数连续调用时，空闲时间必须大于或等于 wait，func 才会执行
- *
- * @param  {function} func        回调函数
- * @param  {number}   wait        表示时间窗口的间隔
- * @param  {boolean}  immediate   设置为ture时，是否立即调用函数
- * @return {function}             返回客户调用函数
- */
-function debounce (func, wait = 50, immediate = true) {
-  let timer, context, args
-
-  // 延迟执行函数
-  const later = () => setTimeout(() => {
-    // 延迟函数执行完毕，清空缓存的定时器序号
-    timer = null
-    // 延迟执行的情况下，函数会在延迟函数中执行
-    // 使用到之前缓存的参数和上下文
-    if (!immediate) {
-      func.apply(context, args)
-      context = args = null
-    }
-  }, wait)
-
-  // 这里返回的函数是每次实际调用的函数
-  return function(...params) {
-    // 如果没有创建延迟执行函数（later），就创建一个
-    if (!timer) {
-      timer = later()
-      // 如果是立即执行，调用函数
-      // 否则缓存参数和调用上下文
-      if (immediate) {
-        func.apply(this, params)
-      } else {
-        context = this
-        args = params
-      }
-    // 如果已有延迟执行函数（later），调用的时候清除原来的并重新设定一个
-    // 这样做延迟函数会重新计时
-    } else {
-      clearTimeout(timer)
-      timer = later()
-    }
-  }
-}
-```
-整体函数实现的不难，总结一下。
-- 对于按钮防点击来说的实现：如果函数是立即执行的，就立即调用，如果函数是延迟执行的，就缓存上下文和参数，放到延迟函数中去执行。一旦我开始一个定时器，只要我定时器还在，你每次点击我都重新计时。一旦你点累了，定时器时间到，定时器重置为 null，就可以再次点击了。
-- 对于延时执行函数来说的实现：清除定时器ID，如果是延迟调用就调用函数
-
-## 节流
-防抖动和节流本质是不一样的。防抖动是将多次执行变为最后一次执行，节流是将多次执行变成每隔一段时间执行
-```js
-function throttle(fn, interval) {
-    let flag = true
-    return function(...args) {
-    	if (!flag) return;
-    	flag = false
-    	setTimeout(() => {
-      	    fn.apply(this, args)
-      	    flag = true
-    	}, interval)
-    }
-}
-
-// 或者可以这样，挑你喜欢的。
-function throttle(fn, interval) {
-    let last = 0 // 首次直接执行
-    return function (...args) {
-    	let now = +new Date()
-    	if(now - last < interval) return;
-    	last = now // 时间一到就更新 last
-    	fn.apply(this, args)
-    }
-}
-```
-
-
 
 ## 继承
 在 ES5 中，我们可以使用如下方式解决继承的问题
@@ -398,33 +285,7 @@ fooContext.Scope = [
 ```
 
 ## this
-##  数据类型
-- 基本类型：Number、Boolean、String、null、undefined、symbol（ES6 新增的），BigInt（ES2020）
-- 引用类型：Object，对象子类型（Array，Function）
-### Number() 的存储空间
-Math.pow(2, 53) ，53 为有效数字，会发生截断，等于 JS 能支持的最大数字。
-### symbol 
-Symbol.for() 可以在全局访问 symbol。
 
-主要用来提供遍历接口，布置了 symbol.iterator 的对象才可以使用 for···of 循环，可以统一处理数据结构。调用之后回返回一个遍历器对象，包含有一个 next 方法，使用 next 方法后有两个返回值 value 和 done 分别表示函数当前执行位置的值和是否遍历完毕。
-
-Symbol.for() 可以在全局访问 symbol
-## instanceof
-检测数据类型，如果变量是给定引用类型的实例，那么instanceof就返回true。如果检测的是基础类型的值，那么返回false
-```js
-function myInstanceof(left,right){
-  //如果是基础类型就直接返回false
-  if(typeof left !='object' && typeof left ==null) return false
-  //Object.getPrototypeOf()方法返回指定对象的原型（内部[[Prototype]]属性的值）
-  let proto=Object.getPrototypeOf(left);
-  while(true){
-    if(!proto) return false;
-    if(proto==right.prototype) return true;
-    proto=Object.getPrototypeOf(proto);
-  } 
-}
-```
-## typeof
 
 ## 闭包
 闭包是指有权访问另外一个函数作用域中的变量的函数

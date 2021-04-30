@@ -31,7 +31,7 @@ Model和View并无直接关联，而是通过ViewModel来进行联系的，Model
 
  
 
-###  Computed和Watch的区别
+### Computed和Watch的区别
 #### Computed
 - 它支持缓存，只有依赖的数据发生了变化，才会重新计算
 - 不支持异步，当Computed中有异步操作时，无法监听数据的变化
