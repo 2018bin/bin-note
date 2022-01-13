@@ -610,6 +610,182 @@ console.log(add(1, 2)(3)); // 6
 console.log(add(1)(2, 3)); // 6
 ```
 
+### 柯里化第一版
+ 
+[参考资料](https://github.com/mqyqingfeng/Blog/issues/42)
+```js
+var curry=function(fn){
+  var args=[].slice.call(arguments,1)
+  return function (){
+    var newArgs=args.concat([].slice.call(arguments))
+    return fn.apply(this.newArgs)
+  }
+}
+function add (a,b){
+  return a+b
+}
+var addCurry=curry(add,1,2)
+addCurry()//3
+var addCurry2=surry(add,1)
+addCurry2(2)//3
+var addCurry3=curry(add)
+addCurry3(1,2)//3
+```
+
+### 惰性函数
+获取第一次的值，之后都不会改变
+```js
+var foo = function() {
+    var t = new Date();
+    foo = function() {
+        return t;
+    };
+    return foo();
+};
+foo()
+```
+### 函数组合
+### 函数记忆
+函数记忆是指将上次的计算结果缓存起来，当下次调用时，如果遇到相同的参数，就直接返回缓存中的数据。
+## 实现一个 new/instanceof 操作符
+### 自定义_new()实现new操作符
+自定义_new()方法，模拟new操作符实现原理，分为以下三步骤：
+- 行 {1} 以构造器的 prototype 属性为原型，创建新对象
+  - {1.1} 创建一个新对象 obj
+  - {1.2} 新对象的 proto 指向构造函数的 prototype，实现继承
+- 行 {2} 改变 this 指向，将新的实例 obj 和参数传入给构造函数 fn 执行
+- 行 {3} 如果构造器没有手动返回对象，则返回第一步创建的对象，例如：function Person(name) { this.name = name; return this; } 这样手动给个返回值，行 {2} result 会拿到一个返回的对象，否则 result 返回 undefined，最后就只能将 obj 给返回。
+```js
+/**
+ * 实现一个 new 操作符
+ * @param { Function } fn 构造函数
+ * @param  { ...any } args
+ * @returns { Object } 构造函数实例
+ */
+function _new(fn, ...args) {
+  // {1}  以构造器的 prototype 属性为原型，创建新对象
+  // 以下两行代码等价于
+  // const obj = Object.create(fn.prototype)
+  const obj = {}; // {1.1} 创建一个新对象 obj
+  obj.__proto__ = fn.prototype; // {1.2} 新对象的 __proto__ 指向构造函数的 prototype，实现继承
+
+  // {2} 改变 this 指向，将新的实例 obj 和参数传入给构造函数 fn 执行
+  const result = fn.apply(obj, args);
+
+  // {3} 返回实例，如果构造器没有手动返回对象，则返回第一步创建的对象
+  return typeof result === 'object' ? result : obj;
+}
+```
+将构造函数 Person 与行参传入我们自定义 _new() 方法，得到实例 zhangsan，使用 instanceof 符号检测与使用 new 是一样的。
+```js
+function Person(name, age) {
+  this.name = name;
+  this.age = age;
+}
+
+const zhangsan = _new(Person, '张三', 20);
+const lisi = new Person('李四', 18)
+
+console.log(zhangsan instanceof Person, zhangsan); // true Person { name: '张三', age: 20 }
+console.log(lisi instanceof Person, lisi); // true Person { name: '李四', age: 18 }
+```
+### 自定义 _instanceof() 实现 instanceof 操作符
+instanceof 运算符用于检测构造函数的 prototype 属性是否出现在某个实例对象的原型链上。
+```js
+function Person() {}
+const p1 = new Person();
+const n1 = new Number()
+
+console.log(p1 instanceof Person) // true
+console.log(n1 instanceof Person) // false
+
+console.log(_instanceof(p1, Person)) // true
+console.log(_instanceof(n1, Person)) // false
+
+function _instanceof(L, R) {
+  L = L.__proto__;
+  R = R.prototype;
+
+  while (true) {
+    if (L === null) return false;
+    if (L === R) return true;
+    L = L.__proto__;
+  }
+}
+```
+## 手撕 call/apply/bind 三兄弟
+### 三者区别：
+- call：改变 this 指向，其它参数挨个传入，会立即执行，例如：test.call(obj, 1, 2);
+- apply：改变 this 指向，第二个参数需传入数组类型，会立即执行，例如：test.call(obj, [1, 2]);
+- bind：改变 this 执行，会接收两次参数传递，需要手动执行，例如：const testFn = test.bind(this, 1); testFn(2);
+### 自定义 mayJunCall 函数
+```js
+/*
+ * 实现一个自己的 call 方法
+ */
+Function.prototype.mayJunCall = function(context) {
+  // {1} 如果 context 不存，根据环境差异，浏览器设置为 window，Nodejs 设置为 global
+  context = context ? context : globalThis.window ? window : global;
+  const fn = Symbol(); // {2} 上下文定义的函数保持唯一，借助 ES6 Symbol 方法 
+  context[fn] = this; // {3} this 为需要执行的方法，例如 function test(){}; test.call(null) 这里的 this 就代表 test() 方法
+  const args = [...arguments].slice(1); // {4} 将 arguments 类数组转化为数组
+  const result = context[fn](...args) // {5} 传入参数执行该方法
+  delete context[fn]; // {6} 记得删除
+  return result; // {7} 如果该函数有返回值，将结果返回
+}
+
+// 测试
+name = 'lisi';
+const obj = {
+  name: 'zs'
+};
+
+function test(age, sex) {
+  console.log(this.name, age, sex);
+}
+
+test(18, '男'); // lisi 18 男
+test.mayJunCall(obj, 18, '男'); // zs 18 男
+```
+### 自定义 mayJunApply 函数
+```js
+/**
+ * 实现一个自己的 apply 方法
+ */
+Function.prototype.mayJunApply = function(context) {
+  let args = [...arguments].slice(1); // 将 arguments 类数组转化为数组
+
+  if (args && args.length > 0 && !Array.isArray(args[0])) { // 参数校验，如果传入必须是数组
+    throw new TypeError('CreateListFromArrayLike called on non-object');
+  }
+
+  context = context ? context : globalThis.window ? window : global;
+  const fn = Symbol();
+  context[fn] = this; 
+  args = args.length > 0 ? args[0] : args; // 因为本身是一个数组，此时传值了就是 [[0, 1]] 这种形式
+  const result = context[fn](...args);
+  delete context[fn];
+  return result
+}
+```
+### 自定义 mayJunBind 函数
+bind 的实现与 call、apply 不同，但也没那么复杂，首先 bind 绑定之后并不会立即执行，而是会返回一个新的匿名函数，只有我们手动调用它才会执行。
+```js
+/**
+ *  实现一个自己的 bind 方法
+ */
+Function.prototype.mayJunBind = function(context) {
+  const that = this; // 保存当前调用时的 this，因为 bind 不是立即执行
+  const firstArgs = [...arguments].slice(1); // 获取第一次绑定时的参数
+
+  return function() {
+    const secondArgs = [...arguments]; // 获取第二次执行时的参数
+    const args = firstArgs.concat(secondArgs); // 两次参数拼接
+
+    return that.apply(context, args); // 将函数与 context 进行绑定，传入两次获取的参数 args
+  }
+}
+```
 ## 实现 map/reduce
 ### 定义 mayJunMap 实现 map 函数
 ```js

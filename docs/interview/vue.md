@@ -1,18 +1,11 @@
 
 ## Vue的响应式系统
-Vue为MVVM框架，当数据模型data变化时，页面视图会得到响应更新.
-
-采用数据劫持结合发布者-订阅者模式的方式,通过Object.defineProperty()（ Proxy）来劫持data各个属性的setter，getter,利用发布订阅的设计模式，在getter方法中进行订阅，在setter方法中发布通知，让所有订阅者完成响应。最后diff算法对比新老vnode差异，通过patch即时更新DOM。
+Vue为MVVM框架，当数据模型data变化时，页面视图会得到响应更新，其原理对data的getter/setter方法进行拦截（Object.defineProperty或者Proxy），利用发布订阅的设计模式，在getter方法中进行订阅，在setter方法中发布通知，让所有订阅者完成响应。
 
 在响应式系统中，Vue会为数据模型data的每一个属性新建一个订阅中心作为发布者，而监听器watch、计算属性computed、视图渲染template/render三个角色同时作为订阅者，对于监听器watch，会直接订阅观察监听的属性，对于计算属性computed和视图渲染template/render，如果内部执行获取了data的某个属性，就会执行该属性的getter方法，然后自动完成对该属性的订阅，当属性被修改时，就会执行该属性的setter方法，从而完成该属性的发布通知，通知所有订阅者进行更新。
 
  
 
-## Vue的数据为什么频繁变化但只会更新一次
-- 检测到数据变化
-- 开启一个队列
-- 在同一事件循环中缓冲所有数据改变
-- 如果同一个 watcher (watcherId相同)被多次触发，只会被推入到队列中一次
 ## Vue的生命周期
 - beforeCreate：是new Vue()之后触发的第一个钩子，在当前阶段data、methods、computed以及watch上的数据和方法都不能被访问。
 - created：在实例创建完成后发生，当前阶段已经完成了数据观测，也就是可以使用数据，更改数据，在这里更改数据不会触发updated函数。可以做一些初始数据的获取，在当前阶段无法与Dom进行交互，如果非要想，可以通过vm.$nextTick来访问Dom。
@@ -44,16 +37,7 @@ Vue为MVVM框架，当数据模型data变化时，页面视图会得到响应更
 计算属性computed更多是作为缓存功能的观察者，它可以将一个或者多个data的属性进行复杂的计算生成一个新的值，提供给渲染函数使用，当依赖的属性变化时，computed不会立即重新计算生成新的值，而是先标记为脏数据，当下次computed被获取时候，才会进行重新计算并返回。
 
 而监听器watch并不具备缓存性，监听器watch提供一个监听函数，当监听的属性发生变化时，会立即执行该函数。
-
-## keep-alive
-- include 指定需要缓存的组件name集合，参数格式支持String, RegExp, Array。当为字符串的时候，多个组件名称以逗号隔开。
-- exclude 指定不需要缓存的组件name集合，参数格式和include一样。
-- max 指定最多可缓存组件的数量,超过数量删除第一个。参数格式支持String、Number。
-
-keep-alive实例会缓存对应组件的VNode,如果命中缓存，直接从缓存对象返回对应VNode
-
-
-
+ 
 ## nextTick原理
 在下次 DOM 更新循环结束之后执行延迟回调。nextTick主要使用了宏任务和微任务。根据执行环境分别尝试采用
 - Promise
@@ -123,8 +107,6 @@ JSX相对于template而言，具有更高的灵活性，在复杂的组件中，
 Virtual DOM 是 DOM 节点在 JavaScript 中的一种抽象数据结构，之所以需要虚拟DOM，是因为浏览器中操作DOM的代价比较昂贵，频繁操作DOM会产生性能问题。虚拟DOM的作用是在每一次响应式数据发生变化引起页面重渲染时，Vue对比更新前后的虚拟DOM，匹配找出尽可能少的需要更新的真实DOM，从而达到提升性能的目的。
 
 ## Diff算法
-- 只对比父节点相同的新旧子节点（比较的是Vnode）,时间复杂度只有O(n)
-- 在 diff 比较的过程中，循环从两边向中间收拢
 在新老虚拟DOM对比时
 - 首先，对比节点本身，判断是否为同一节点，如果不为相同节点，则删除该节点重新创建节点进行替换
 - 如果为相同节点，进行patchVnode，判断如何对该节点的子节点进行处理，先判断一方有子节点一方没有子节点的情况(如果新的children没有子节点，将旧的子节点移除)
@@ -138,7 +120,6 @@ Virtual DOM 是 DOM 节点在 JavaScript 中的一种抽象数据结构，之所
 
 ## Vue2.0和Vue3.0有什么区别
 ### 重构响应式系统，使用Proxy替换Object.defineProperty，使用Proxy优势：
-`Object.defineProperty()`数组的length属性被初始化configurable false，所以想要通过get/set方法来监听length属性是不可行的。
 - 可直接监听数组类型的数据变化
 - 监听的目标为对象本身，不需要像Object.defineProperty一样遍历每个属性，有一定的性能提升
 - 可拦截apply、ownKeys、has等13种方法，而Object.defineProperty不行
